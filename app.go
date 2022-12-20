@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 )
 
 type person struct {
@@ -12,8 +13,41 @@ type person struct {
 }
 
 func main() {
-	data_marshal()
-	data_unmarshal()
+	// data_marshal()
+	// data_unmarshal()
+	http_services()
+}
+
+func http_services() {
+	// declare service endpoint
+	http.HandleFunc("/encode", encode_func)
+	http.HandleFunc("/decode", decode_func)
+	http.ListenAndServe(":8080", nil)
+}
+
+// curl command consumming the encode service
+// curl localhost:8080/encode
+func encode_func(w http.ResponseWriter, r *http.Request) {
+	p1 := person{
+		First: "Andrew",
+		Last:  "Zou",
+	}
+
+	err := json.NewEncoder((w)).Encode(p1)
+	if err != nil {
+		log.Println("Encoded bad data!", err)
+	}
+}
+
+// curl reqest consumming the decode service
+// curl -XGET -H "Content-type: application/json" -d '{"First": "Andrew", "Last": "ZOU"}' 'localhost:8080/decode'
+func decode_func(w http.ResponseWriter, r *http.Request) {
+	var p1 person
+	err := json.NewDecoder(r.Body).Decode(&p1)
+	if err != nil {
+		log.Println("Decode bad request data: ", err)
+	}
+	log.Println("decode request body: ", p1)
 }
 
 func data_marshal() {
